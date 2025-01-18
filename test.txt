@@ -1,1 +1,5 @@
-test1
+<<<<<<< HEAD
+test
+=======
+test
+>>>>>>> new_branch
