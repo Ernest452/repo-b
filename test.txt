@@ -1,1 +1,41 @@
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC080PG9CMdTrgAGNUfPjtRV3By1mCM7zqwrR4/Ho8L1+c18RnFoDZv8DihEQ5aBEnDf0fPzgf/ZcZ/hb6jbXlFgd5LiQpWOf8kFOBafvuk+y9Y8+RTe402hRawne/e/qxmzCQBLV9VWo/6BnV5g1ciWRv7ELUwEESukzS9Lt1QiYmLbayk6Nc1rvC4r0iz51fzU6kNM09PaYHdQGQ6ThBufJDxCTtfCXIe3Utp+VprHaXCWNcNXGwiINeFL8ApsPXen3/hvSzvRNfHs9gJslzopP6xARM8YwHYon4X6nOD1rvx/dbYI2rT8yGtFCZMLE5z8jTOK2uI/k51WK1Vc6hZ Generated-by-Nova
+#!/bin/bash
+
+# Проверяем и создаем директорию .ssh
+if [ ! -d "$HOME/.ssh" ]; then
+    mkdir -p ~/.ssh
+    echo "Директория .ssh создана."
+fi
+
+# Устанавливаем права доступа
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+echo "Права доступа установлены."
+
+# Проверяем и редактируем конфигурацию SSH
+CONFIG_FILE="/etc/ssh/sshd_config"
+if grep -q "^PubkeyAuthentication" "$CONFIG_FILE"; then
+    sed -i 's/^PubkeyAuthentication .*/PubkeyAuthentication yes/' "$CONFIG_FILE"
+else
+    echo "PubkeyAuthentication yes" >> "$CONFIG_FILE"
+fi
+
+if grep -q "^AuthorizedKeysFile" "$CONFIG_FILE"; then
+    sed -i 's|^AuthorizedKeysFile .*|AuthorizedKeysFile .ssh/authorized_keys|' "$CONFIG_FILE"
+else
+    echo "AuthorizedKeysFile .ssh/authorized_keys" >> "$CONFIG_FILE"
+fi
+
+if grep -q "^PasswordAuthentication" "$CONFIG_FILE"; then
+    sed -i 's/^PasswordAuthentication .*/PasswordAuthentication no/' "$CONFIG_FILE"
+else
+    echo "PasswordAuthentication no" >> "$CONFIG_FILE"
+fi
+
+echo "Конфигурация SSH обновлена."
+
+# Перезапуск SSH
+sudo systemctl restart ssh
+echo "Служба SSH перезапущена."
+
+# Проверка статуса
+sudo systemctl status ssh
